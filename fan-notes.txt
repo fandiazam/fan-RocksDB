@@ -1,3 +1,4 @@
+
 ==========================================================================
                              RocksDB Benchmarking
 ==========================================================================
@@ -37,61 +38,48 @@
 
 
 1. Connect to the server
-    ssh daniar@192.5.86.174 #dan-5 server
-    cd /home/daniar/ev-table/
+    ssh cc@192.5.86.194 #Rex's server
+    cd /home/cc/fan-rocksdb
 
 2. Convert the EV-table to RocksDB and test simple request
     cd mnt/extra
     mkdir rocksdb
     cd rocksdb
-    mkdir {csv_workload,bin_workload,csv_db,bin_db}
-    cp /mnt/extra/dlrm/weights_and_biases/epoch-0/ev-table/* /mnt/extra/rocksdb/csv_workload/
-    cp /home/cc/ev-tables-sqlite/ev-table-32/* /home/cc/fan-rocksdb/csv_workload
-
-    # Raw EV-table (csv file) path  
-    # csv_ev_path = /home/daniar/ev-table/csv_file
-
-    # generated databases path
-    # db_ev_path = home/daniar/ev-table/db_file
-
-    # Convert the EV-table to DB 
-    # by default this command will access the csv_ev_path and db_ev_path 
+    mkdir {csv_workload,bin_workload,str_db,bin_db}
     
-    cd /home/daniar/ev-table/
+    # Copy raw EV-table into csv_workload folder
+    # cp /mnt/extra/dlrm/weights_and_biases/epoch-0/ev-table/* /mnt/extra/rocksdb/csv_workload/
+    cp /home/cc/ev-tables-sqlite/ev-table-32/* /home/cc/fan-rocksdb/csv_workload
+    
+    # Open create_ev_table.py, then change these so it matches your folder paths
+    # ================CHANGE THESE!!=============== #
+    # csv_ev_path = "/home/cc/fan-rocksdb/csv_workload"
+    # bin_ev_path = "/home/cc/fan-rocksdb/bin_workload"
+    # str_db_path = "/home/cc/fan-rocksdb/str_db"
+    # bin_db_path = "/home/cc/fan-rocksdb/bin_db"
+    # ============================================== #
+    # *_ev_path folder contain raw EV-table
+    # *_db_path folder contain RocksDB database
+    
+    # RUN ONE BY ONE! 
+
+    cd /home/cc/fan-rocksdb
     python create_ev_table.py --convert-csv2bin
     python create_ev_table.py --store-csv2db
-    python create_ev_table.py --store-bin2db
-    python create_ev_table.py --simple-benchmark-binDB
+    nohup python create_ev_table.py --store-bin2db & # Takes ~1 hour
+
+    # Just to make sure whether the process of storing EV-table to RocksDB has been successful or not
+    
+    python create_ev_table.py --simple-benchmark-binDB 
     python create_ev_table.py --simple-benchmark-strDB
 
-
-    # nohup python create_ev_table.py --store-bin2db &
-
-    bash ./multiclient-benchmark.sh
-
-    # oserror errno 98 address already in use socket
-    # kill -9 $(ps -A | grep python | awk '{print $1}')
-
-   
-    
-    # Get the value (just simple request)
-    # by default it will request ["1-1", "2-3", "2-1", "2-4", "1-6"]
+    # It will request ["1-1", "2-3", "2-1", "2-4", "1-6"]
     # 2-3; "2" for table and "3" for the key
 
-    python create_ev_table.py --get-value  
 
 3. Single client benchmarking
     
-    python singleClientBench.py --benchmark-strDB
-    python singleClientBench2.py --benchmark-strDB
+    cd /home/cc/fan-rocksdb
 
-    python singleClientBench.py --benchmark-strDB --max-request 100000 --cdfFilename single-strDB.csv > log-single-strDB.txt &
-    python singleClientBench.py --benchmark-binDB --max-request 100000 --cdfFilename single-binDB.csv > log-single-binDB.txt &
-
-
-    python singleClientBench.py --benchmark-strDB --max-request 100000 --cdfFilename dummy.csv
-
-
-4. Multi client benchmark
-    nohup bash ./fan-multiclient-benchmark.sh &
-
+    python singleClientBench2.py --benchmark-strDB --max-request 1000 --latencyFile dummy.csv
+    python singleClientBench2.py --benchmark-binDB --max-request 1000 --latencyFile dummy.csv

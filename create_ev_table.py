@@ -96,13 +96,15 @@ if __name__ == "__main__":
     parser.add_argument("--simple-benchmark-strDB", action="store_true", default=False)
 
     args = parser.parse_args()
-    # CHANGE THESE!!
+
+    # ================CHANGE THESE!!=============== #
     csv_ev_path = "/home/cc/fan-rocksdb/csv_workload"
     bin_ev_path = "/home/cc/fan-rocksdb/bin_workload"
-    csv_db_path = "/home/cc/fan-rocksdb/csv_db"
+    str_db_path = "/home/cc/fan-rocksdb/str_db"
     bin_db_path = "/home/cc/fan-rocksdb/bin_db"
 
     total_ev_table = 26
+    # ============================================== #
 
     if args.convert_csv2bin: # Takes 30 minutes
         for ev_idx in range(0, total_ev_table):
@@ -136,7 +138,7 @@ if __name__ == "__main__":
             opts.OptimizeLevelStyleCompaction()
             opts.create_if_missing = True
             dbFilename = "str-ev-table-" + str(ev_idx + 1) + ".db" 
-            dbFilename = os.path.join(csv_db_path, dbFilename)
+            dbFilename = os.path.join(str_db_path, dbFilename)
             #print(dbFilename)
             s = db.open(opts, dbFilename)
             assert(s.ok())
@@ -162,73 +164,8 @@ if __name__ == "__main__":
             #print(embedding)
             #exit(1)
             db.close()
-            #get_csv_db(csv_db_path, key)
+            #get_csv_db(str_db_path, key)
 
-    if args.simple_benchmark_binDB or args.simple_benchmark_strDB:
-        # This is just sample 
-        key_value = ["1-1", "2-3", "2-1", "2-4", "1-6"]
-        elapsedTime = 0
-        n_request = 0
-        if args.simple_benchmark_strDB:
-            for kv in key_value:
-                db = pyrocksdb.DB()
-                opts = pyrocksdb.Options()
-
-                # for multi-thread
-                opts.IncreaseParallelism()
-                opts.OptimizeLevelStyleCompaction()
-                opts.create_if_missing = True
-
-                splited_key_value = kv.split("-")
-                #print(splited_key_value)
-                dbFilename = "str-ev-table-" + splited_key_value[0] + ".db"
-                dbFilename = os.path.join(csv_db_path, dbFilename)
-                #print(dbFilename)
-                key = splited_key_value[1]
-                # open DB
-                s = db.open(opts, dbFilename)
-                assert(s.ok())
-                n_request += 1
-                elapsedTime += get_csv_db(db, opts, key)
-
-            db.close()
-            print("==========CSV===========")
-            print("Total key read (26 EV-Tables) = ", n_request)
-            print("Elapsed time = ", float(round(elapsedTime/1000,2)), " ms")
-            IOPS = float(round(n_request/(elapsedTime/1000000),2))
-            print("IOPS = ", IOPS)
-            #exit(1)
-            
-        if args.simple_benchmark_binDB:
-            for kv in key_value:
-                db = pyrocksdb.DB()
-                opts = pyrocksdb.Options()
-
-                # for multi-thread
-                opts.IncreaseParallelism()
-                opts.OptimizeLevelStyleCompaction()
-                opts.create_if_missing = True
-
-                splited_key_value = kv.split("-")
-                #print(splited_key_value)
-                dbFilename = "bin-ev-table-" + splited_key_value[0] + ".db"
-                dbFilename = os.path.join(bin_db_path, dbFilename)
-                #print(dbFilename)
-                key = splited_key_value[1]
-                # open DB
-                s = db.open(opts, dbFilename)
-                assert(s.ok())
-
-                n_request += 1
-                elapsedTime += get_bin_db(db, opts, key)
-
-            db.close()
-            print("==========BIN===========")
-            print("Total key read (26 EV-Tables) = ", n_request)
-            print("Elapsed time = ", float(round(elapsedTime/1000,2)), " ms")
-            IOPS = float(round(n_request/(elapsedTime/1000000),2))
-            print("IOPS = ", IOPS)
-            #exit(1)
         
     if args.store_bin2db:
         for ev_idx in range(0, 26):
@@ -278,3 +215,69 @@ if __name__ == "__main__":
                 print("===== output file : " + dbFilename)
             f.close()
                 
+
+    if args.simple_benchmark_binDB or args.simple_benchmark_strDB:
+        # This is just sample 
+        key_value = ["1-1", "2-3", "2-1", "2-4", "1-6"]
+        elapsedTime = 0
+        n_request = 0
+        if args.simple_benchmark_strDB:
+            for kv in key_value:
+                db = pyrocksdb.DB()
+                opts = pyrocksdb.Options()
+
+                # for multi-thread
+                opts.IncreaseParallelism()
+                opts.OptimizeLevelStyleCompaction()
+                opts.create_if_missing = True
+
+                splited_key_value = kv.split("-")
+                #print(splited_key_value)
+                dbFilename = "str-ev-table-" + splited_key_value[0] + ".db"
+                dbFilename = os.path.join(str_db_path, dbFilename)
+                #print(dbFilename)
+                key = splited_key_value[1]
+                # open DB
+                s = db.open(opts, dbFilename)
+                assert(s.ok())
+                n_request += 1
+                elapsedTime += get_csv_db(db, opts, key)
+
+            db.close()
+            print("==========CSV===========")
+            print("Total key read (26 EV-Tables) = ", n_request)
+            print("Elapsed time = ", float(round(elapsedTime/1000,2)), " ms")
+            IOPS = float(round(n_request/(elapsedTime/1000000),2))
+            print("IOPS = ", IOPS)
+            #exit(1)
+            
+        if args.simple_benchmark_binDB:
+            for kv in key_value:
+                db = pyrocksdb.DB()
+                opts = pyrocksdb.Options()
+
+                # for multi-thread
+                opts.IncreaseParallelism()
+                opts.OptimizeLevelStyleCompaction()
+                opts.create_if_missing = True
+
+                splited_key_value = kv.split("-")
+                #print(splited_key_value)
+                dbFilename = "bin-ev-table-" + splited_key_value[0] + ".db"
+                dbFilename = os.path.join(bin_db_path, dbFilename)
+                #print(dbFilename)
+                key = splited_key_value[1]
+                # open DB
+                s = db.open(opts, dbFilename)
+                assert(s.ok())
+
+                n_request += 1
+                elapsedTime += get_bin_db(db, opts, key)
+
+            db.close()
+            print("==========BIN===========")
+            print("Total key read (26 EV-Tables) = ", n_request)
+            print("Elapsed time = ", float(round(elapsedTime/1000,2)), " ms")
+            IOPS = float(round(n_request/(elapsedTime/1000000),2))
+            print("IOPS = ", IOPS)
+            #exit(1)
